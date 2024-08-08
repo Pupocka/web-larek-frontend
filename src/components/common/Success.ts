@@ -14,17 +14,17 @@ export class Success extends Component<ISuccess> {
   protected _close: HTMLElement;
 
   constructor(container: HTMLElement, actions: ISuccessActions) {
-      super(container);
+    super(container);
 
-      this._close = ensureElement<HTMLElement>('.order-success__close', this.container);
-      this._total = ensureElement<HTMLElement>('.order-success__description', this.container)
+    this._close = ensureElement<HTMLElement>('.order-success__close', container);
+    this._total = ensureElement<HTMLElement>('.order-success__description', container);
 
-      if (actions?.onClick) {
-          this._close.addEventListener('click', actions.onClick);
-      }
+    if (actions?.onClick) {
+      this._close.addEventListener('click', actions.onClick);
+    }
   }
 
-  set total(value: string) {
+  set total(value: number) {
     this._total.textContent = `Списано ${value} синапсов`;
   }
 }

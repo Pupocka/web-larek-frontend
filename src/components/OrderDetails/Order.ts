@@ -1,7 +1,7 @@
-import { IOrder } from "../types";
-import { ensureAllElements } from "../utils/utils";
-import { IEvents } from "./base/events";
-import { Form } from "./common/Form";
+import { IOrder } from "../../types";
+import { ensureAllElements } from "../../utils/utils";
+import { IEvents } from "../base/events";
+import { Form } from "../common/Form";
 
 
 export class Order extends Form<IOrder> {
@@ -11,7 +11,6 @@ export class Order extends Form<IOrder> {
       super(container, events);
 
       this._buttons = ensureAllElements<HTMLButtonElement>('.button_alt', container);
-
       this._buttons.forEach(button => {
           button.addEventListener('click', () => {
             this.payment = button.name; 
@@ -28,19 +27,9 @@ export class Order extends Form<IOrder> {
   }
 
   set address(value: string) {
-    (this.container.elements.namedItem('address') as HTMLInputElement).value = value;
-  }
-
-}
-
-export class Сontacts extends Form<IOrder> {
-  constructor(container: HTMLFormElement, events: IEvents) {
-    super(container, events);
-  }
-  set phone(value: string) {
-    (this.container.elements.namedItem('phone') as HTMLInputElement).value = value;
-  }
-  set email(value: string) {
-    (this.container.elements.namedItem('email') as HTMLInputElement).value = value;
+    const input = this.container.querySelector<HTMLInputElement>('input[name="address"]');
+    if (input) {
+      input.value = value;
+    }
   }
 }

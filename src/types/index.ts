@@ -1,39 +1,32 @@
 export interface IProduct {
   id: string;
-  description: string;
+  description?: string;
   image: string;
   title: string;
   category: string;
-  price: number;
+  price: number | null;
+  index?: number;
 }
 
-export interface IAppData {
-  catalog: IProduct[];
-  preview: string;
-  basket: string[];
-  order: IOrder;
-  total: string | number;
-  loading: boolean;
-}
-
-export interface IProductsList {
-  items: IProduct[];
-}
-
-export interface IOrderForm {
-  payment?: string;
-  address?: string;
-  phone?: string;
+export interface IOrder {
   email?: string;
-  total?: string | number;
+  phone?: string;
+  address?: string;
+  payment?: string;
+  total?: number;
+  items?: string[];
 }
-
-export interface IOrder extends IOrderForm {
-  items: string[];
-}
-
-export type FormErrors = Partial<Record<keyof IOrder, string>>;
 
 export interface IOrderResult {
   id: string;
 }
+
+export interface IProductsData{
+  items: IProduct[];
+  preview: string | null;
+  getProduct(productId: string): IProduct;
+}
+export type PaymentType = 'card' | 'cash';
+
+export type FormErrors = Partial<Record<keyof IOrder, string>>;
+

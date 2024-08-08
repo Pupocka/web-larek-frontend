@@ -1,36 +1,41 @@
+/**
+ * Базовый компонент
+ */
 export abstract class Component<T> {
-  protected constructor(protected readonly container: HTMLElement) {}
+    protected constructor(protected readonly container: HTMLElement) {
+}
 
-
-  // Переключить класс
-  toggleClass(element: HTMLElement, className: string, force?: boolean) {
-    element.classList.toggle(className, force);
+  toggleClass(element: HTMLElement, className: string, force?: boolean): void {
+    element.classList.toggle(className, force ?? false);
   }
 
-  setDisabled(element: HTMLElement, state: boolean) {
-    if (element) {
-      if (state) element.setAttribute('disabled', 'disabled');
-      else element.removeAttribute('disabled');
+  setDisabled(element: HTMLElement, state: boolean): void {
+    if (state) {
+      element.setAttribute('disabled', '');
+    } else {
+      element.removeAttribute('disabled');
     }
   }
 
-  protected setText(element: HTMLElement, value: unknown) {
-    if (element) {
+  protected setText(element: Element, value: unknown): void {
+    if (element instanceof HTMLElement) {
       element.textContent = String(value);
     }
   }
 
-  protected setImage(element: HTMLImageElement, src: string, alt?: string) {
-    if(element) {
+  protected setImage(element: HTMLImageElement, src: string, alt?: string): void {
+    if (element) {
       element.src = src;
-      if(alt) {
+      if (alt) {
         element.alt = alt;
       }
     }
   }
 
   render(data?: Partial<T>): HTMLElement {
-      Object.assign(this as object, data ?? {});
-      return this.container;
+    if (data) {
+      Object.assign(this, data);
+    }
+    return this.container;
   }
 }

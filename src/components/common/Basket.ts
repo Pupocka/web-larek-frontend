@@ -1,11 +1,11 @@
-import { createElement, ensureElement, formatNumber} from "../../utils/utils";
+import { createElement, ensureElement, formatNumber } from "../../utils/utils";
 import { Component } from "../base/Component";
 import { EventEmitter } from "../base/events";
-
 
 interface IBasket {
   items: HTMLElement[];
   total: number;
+  disabled: boolean;
 }
 
 export class Basket extends Component<IBasket> {
@@ -17,10 +17,11 @@ export class Basket extends Component<IBasket> {
     super(container);
 
     this._list = ensureElement<HTMLElement>('.basket__list', this.container);
-    this._total = this.container.querySelector('.basket__price');
+    this._total = ensureElement<HTMLElement>('.basket__price', this.container);
     this.button = this.container.querySelector('.basket__button');
 
     if (this.button) {
+      this.button.textContent = 'Открыть заказ';
       this.button.addEventListener('click', () => {
         events.emit('order:open');
       });
@@ -39,7 +40,14 @@ export class Basket extends Component<IBasket> {
     }
   }
 
+  set selected(items: string[]) {
+    if (items.length) {
+        this.setDisabled(this.button, false);
+    } else {
+        this.setDisabled(this.button, true);
+    }
+}
   set total(total: number) {
-    this.setText(this._total, `${total} синапсов`);
+    this.setText(this._total, `${formatNumber(total)} синапсов`);
   }
 }

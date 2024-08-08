@@ -1,8 +1,11 @@
 import { IEvents } from "./events";
 
 export abstract class Model<T> {
-  constructor(data: Partial<T>, protected events: IEvents) {
+  protected events: IEvents;
+
+  constructor(data: Partial<T>, events: IEvents) {
     Object.assign(this, data);
+    this.events = events;
   }
 
   emitChanges(event: string, payload?: object) {
