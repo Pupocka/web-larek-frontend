@@ -5,7 +5,6 @@ import { EventEmitter } from "../base/events";
 interface IBasket {
   items: HTMLElement[];
   total: number;
-  disabled: boolean;
 }
 
 export class Basket extends Component<IBasket> {
@@ -21,9 +20,9 @@ export class Basket extends Component<IBasket> {
     this.button = this.container.querySelector('.basket__button');
 
     if (this.button) {
-      this.button.textContent = 'Открыть заказ';
+      this.button.textContent = 'Оформить';
       this.button.addEventListener('click', () => {
-        events.emit('order:open');
+        this.events.emit('order:open');
       });
     }
 
@@ -38,16 +37,19 @@ export class Basket extends Component<IBasket> {
         textContent: 'Корзина пуста'
       }));
     }
+    this.setDisabled(this.button, !items.length);
   }
 
-  set selected(items: string[]) {
-    if (items.length) {
-        this.setDisabled(this.button, false);
-    } else {
-        this.setDisabled(this.button, true);
-    }
-}
   set total(total: number) {
     this.setText(this._total, `${formatNumber(total)} синапсов`);
+  }
+
+  setText(element: HTMLElement, text: string): void {
+    element.textContent = text;
+  }
+
+  setDisabled(element: HTMLElement | null, disabled: boolean): void {
+    if (!element || !(element instanceof HTMLButtonElement)) return;
+    element.disabled = disabled;
   }
 }

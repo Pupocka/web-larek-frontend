@@ -8,16 +8,20 @@ export interface IProduct {
   index?: number;
 }
 
-export interface IOrder {
+export interface IOrderForm {
   email?: string;
   phone?: string;
   address?: string;
   payment?: string;
-  total?: number;
-  items?: string[];
+}
+
+export interface IOrder extends IOrderForm{
+  total: number;
+  items: string[];
 }
 
 export interface IOrderResult {
+	total: number;
   id: string;
 }
 
@@ -26,7 +30,6 @@ export interface IProductsData{
   preview: string | null;
   getProduct(productId: string): IProduct;
 }
-export type PaymentType = 'card' | 'cash';
 
 export type FormErrors = Partial<Record<keyof IOrder, string>>;
 

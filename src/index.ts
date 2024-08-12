@@ -1,17 +1,17 @@
+import { ProductsCatalog } from './components/products/ProductsCatalog';
+import { Product } from './components/products/Product';
 import { EventEmitter } from './components/base/events';
 import { Basket } from './components/common/Basket';
 import { Modal } from './components/common/Modal';
 import { LarekApi } from './components/LarekApi';
-import { Order } from './components/OrderDetails/Order';
+import { Order } from './components/orderDetails/Order';
+import { Contacts } from './components/orderDetails/Contacts';
 import { Page } from './components/Page';
-import { Product } from './components/Product/Product';
-import { ProductPreview } from './components/Product/ProductPreview';
-import { ProductsCatalog } from './components/Product/ProductsCatalog';
 import './scss/styles.scss';
-import { IOrderResult, IProduct } from './types';
 import { API_URL, CDN_URL } from './utils/constants';
 import { cloneTemplate, ensureElement } from './utils/utils';
-
+import { IOrder, IOrderForm, IProduct } from './types';
+import { Success } from './components/common/Success';
 
 const events = new EventEmitter();
 const api = new LarekApi(CDN_URL, API_URL);
@@ -37,17 +37,15 @@ const page = new Page(document.body, events);
 const modal = new Modal(ensureElement<HTMLElement>('#modal-container'), events)
 const basket = new Basket(cloneTemplate<HTMLTemplateElement>(basketTemplate), events);
 const order = new Order(cloneTemplate<HTMLFormElement>(orderTemplate), events);
-// const contacts = new Сontacts(cloneTemplate<HTMLFormElement>(contactsTemplate), events);
+const contacts = new Contacts(cloneTemplate<HTMLFormElement>(contactsTemplate), events);
 
 
-
-
-events.on('items:changed', () => {
+events.on('products:changed', () => {
   page.catalog = productsCatalog.catalog.map((item) => {
-    const card = new Product(cloneTemplate(productCatalogTemplate), {
-      onClick: () => events.emit('card:select', item) 
+    const product = new Product('card', cloneTemplate(productCatalogTemplate), {
+      onClick: () => events.emit('product:select', item) 
     });
-		return card.render({
+    return product.render({
 			id: item.id,
 			title: item.title,
 			image: item.image,
@@ -57,37 +55,148 @@ events.on('items:changed', () => {
   })
 })
 
+events.on('product:select', (item: IProduct) => {
+	const product = new Product('card', cloneTemplate(productPreviewTemplate),  {
+		onClick: () => events.emit('product:add', item),
+	});
+	modal.render({
+		content: product.render({
+			id: item.id,
+			title: item.title,
+			image: item.image,
+			price: item.price,
+			category: item.category,
+			description: item.description,
+		}),
+	});
 
-
-
-// Открытие корзины пользователем.
-
-
-
-
-
-
-
-
-api.getCatalog().then((catalog) => {
-  console.log('Каталог товаров:', catalog);
-}).catch((error) => {
-  console.error('Ошибка при получении каталога:', error);
+	if (item.price === null) {
+		product.setDisabled(product.button, true);
+	} else if (productsCatalog.containsProduct(item)) {
+		product.setDisabled(product.button, true);
+	}
 });
 
+events.on('product:add', (item: IProduct) => {
+	productsCatalog.addItem('addOrderID', item);
+	productsCatalog.addItem('addToBasket', item);
+	page.counter = productsCatalog.basket.length;
+	modal.close();
+});
 
+function updateBasketUI(productsCatalog: ProductsCatalog) {
+	basket.total = productsCatalog.getTotalOrder();
+	basket.setDisabled(basket.button, productsCatalog.isBasketEmpty);
+	basket.items = productsCatalog.basket.map((item, index) => {
+			const product = new Product('card', cloneTemplate(productBasket), {
+					onClick: () => events.emit('product:remove', item),
+			});
+			return product.render({
+					title: item.title,
+					price: item.price,
+					index: index + 1,
+			});
+	});
 
+	modal.render({
+			content: basket.render(),
+	});
+}
 
+events.on('basket:open', () => {
+	updateBasketUI(productsCatalog);
+});
 
+events.on('product:remove', (item: IProduct) => {
+	productsCatalog.removeItem('basket', item);
+	productsCatalog.removeItem('order', item);
+	page.counter = productsCatalog.basket.length;
+	updateBasketUI(productsCatalog);
+});
 
+events.on('order:open', () => {
+	modal.render({
+			content: order.render({
+					address: '',
+					payment: '',
+					valid: false,
+					errors: [],
+			}),
+	});
+});
 
-// // // Блокируем прокрутку страницы если открыта модалка
-// // emitter.on('modal:open', () => {
-// //     page.locked = true;
-// // });
+events.on('order:submit', () => {
+	productsCatalog.order.total = productsCatalog.getTotalOrder();
+	modal.render({
+		content: contacts.render({
+			email: '',
+			phone: '',
+			valid: false,
+			errors: [],
+		}),
+	});
+});
 
-// // // Разблокируем прокрутку страницы если открыта модалка
-// // emitter.on('modal:close', () => {
-// //     page.locked = false;
-// // });
+events.on('formErrors:change', (errors: Partial<IOrder>) => {
+	const { email, phone, address, payment } = errors;
+	order.valid = !address && !payment;
+	contacts.valid = !email && !phone;
+	order.errors = Object.values({ address, payment }).filter(i => !!i).join('; ');
+	contacts.errors = Object.values({email, phone}).filter(i => !!i).join('; ');
+});
 
+events.on('payment:change', (item: HTMLButtonElement) => {
+	productsCatalog.order.payment = item.name;
+	productsCatalog.validateForm();
+});
+
+events.on(
+	/^order\..*:change/, (data: { field: keyof IOrderForm; value: string }) => {
+		productsCatalog.setOrderField(data.field, data.value);
+		
+	}
+);
+
+events.on(
+	/^contacts\..*:change/,
+	(data: { field: keyof IOrderForm; value: string }) => {
+		productsCatalog.setOrderField(data.field, data.value);
+	}
+);
+
+events.on('contacts:submit', () => {
+	api.order(productsCatalog.order)
+		.then((res) => {
+			const success = new Success(cloneTemplate(successTemplate), {
+				onClick: () => {
+					modal.close();
+				},
+			});
+
+			modal.render({
+				content: success.render({
+					total: res.total,
+				}),
+			});
+
+			productsCatalog.clearBasket();
+			page.counter = 0;
+		})
+		.catch((err) => {
+			console.error(err);
+		});
+});
+
+events.on('modal:open', () => {
+    page.locked = true;
+});
+
+events.on('modal:close', () => {
+    page.locked = false;
+});
+
+api.getCatalog()
+  .then(productsCatalog.setCatalog.bind(productsCatalog))
+  .catch((error) => {
+    console.error('Ошибка при получении каталога:', error);
+  });

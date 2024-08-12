@@ -1,10 +1,10 @@
-import { IOrder } from "../../types";
+import { IOrderForm } from "../../types";
 import { ensureAllElements } from "../../utils/utils";
 import { IEvents } from "../base/events";
 import { Form } from "../common/Form";
 
 
-export class Order extends Form<IOrder> {
+export class Order extends Form<IOrderForm> {
   protected _buttons: HTMLButtonElement[];
 
   constructor(container: HTMLFormElement, events: IEvents) {
