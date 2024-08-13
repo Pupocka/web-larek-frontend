@@ -25,11 +25,5 @@ export interface IOrderResult {
   id: string;
 }
 
-export interface IProductsData{
-  items: IProduct[];
-  preview: string | null;
-  getProduct(productId: string): IProduct;
-}
-
 export type FormErrors = Partial<Record<keyof IOrder, string>>;
 

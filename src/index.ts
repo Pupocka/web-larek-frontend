@@ -22,7 +22,6 @@ events.onAll((event) => {
 
 const productsCatalog = new ProductsCatalog({}, events);
 
-
 const successTemplate = ensureElement<HTMLTemplateElement>('#success');
 const productCatalogTemplate = ensureElement<HTMLTemplateElement>('#card-catalog');
 const productPreviewTemplate = ensureElement<HTMLTemplateElement>('#card-preview');
@@ -30,8 +29,6 @@ const productBasket = ensureElement<HTMLTemplateElement>('#card-basket');
 const basketTemplate = ensureElement<HTMLTemplateElement>('#basket');
 const orderTemplate = ensureElement<HTMLTemplateElement>('#order');
 const contactsTemplate = ensureElement<HTMLTemplateElement>('#contacts');
-
-
 
 const page = new Page(document.body, events);
 const modal = new Modal(ensureElement<HTMLElement>('#modal-container'), events)
@@ -43,7 +40,7 @@ const contacts = new Contacts(cloneTemplate<HTMLFormElement>(contactsTemplate), 
 events.on('products:changed', () => {
   page.catalog = productsCatalog.catalog.map((item) => {
     const product = new Product('card', cloneTemplate(productCatalogTemplate), {
-      onClick: () => events.emit('product:select', item) 
+      onClick: () => events.emit('product:preview', item) 
     });
     return product.render({
 			id: item.id,
@@ -55,9 +52,9 @@ events.on('products:changed', () => {
   })
 })
 
-events.on('product:select', (item: IProduct) => {
+events.on('product:preview', (item: IProduct) => {
 	const product = new Product('card', cloneTemplate(productPreviewTemplate),  {
-		onClick: () => events.emit('product:add', item),
+		onClick: () => events.emit('basket:add-product', item),
 	});
 	modal.render({
 		content: product.render({
@@ -77,7 +74,7 @@ events.on('product:select', (item: IProduct) => {
 	}
 });
 
-events.on('product:add', (item: IProduct) => {
+events.on('basket:add-product', (item: IProduct) => {
 	productsCatalog.addItem('addOrderID', item);
 	productsCatalog.addItem('addToBasket', item);
 	page.counter = productsCatalog.basket.length;
@@ -89,7 +86,7 @@ function updateBasketUI(productsCatalog: ProductsCatalog) {
 	basket.setDisabled(basket.button, productsCatalog.isBasketEmpty);
 	basket.items = productsCatalog.basket.map((item, index) => {
 			const product = new Product('card', cloneTemplate(productBasket), {
-					onClick: () => events.emit('product:remove', item),
+					onClick: () => events.emit('basket:remove-product', item),
 			});
 			return product.render({
 					title: item.title,
@@ -107,14 +104,14 @@ events.on('basket:open', () => {
 	updateBasketUI(productsCatalog);
 });
 
-events.on('product:remove', (item: IProduct) => {
+events.on('basket:remove-product', (item: IProduct) => {
 	productsCatalog.removeItem('basket', item);
 	productsCatalog.removeItem('order', item);
 	page.counter = productsCatalog.basket.length;
 	updateBasketUI(productsCatalog);
 });
 
-events.on('order:open', () => {
+events.on('basket:create-order', () => {
 	modal.render({
 			content: order.render({
 					address: '',
@@ -145,7 +142,7 @@ events.on('formErrors:change', (errors: Partial<IOrder>) => {
 	contacts.errors = Object.values({email, phone}).filter(i => !!i).join('; ');
 });
 
-events.on('payment:change', (item: HTMLButtonElement) => {
+events.on('order:set-payment-type', (item: HTMLButtonElement) => {
 	productsCatalog.order.payment = item.name;
 	productsCatalog.validateForm();
 });
@@ -164,7 +161,7 @@ events.on(
 	}
 );
 
-events.on('contacts:submit', () => {
+events.on('order:submit', () => {
 	api.order(productsCatalog.order)
 		.then((res) => {
 			const success = new Success(cloneTemplate(successTemplate), {

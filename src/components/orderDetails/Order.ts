@@ -8,16 +8,15 @@ export class Order extends Form<IOrderForm> {
   protected _buttons: HTMLButtonElement[];
 
   constructor(container: HTMLFormElement, events: IEvents) {
-      super(container, events);
+    super(container, events);
 
-      this._buttons = ensureAllElements<HTMLButtonElement>('.button_alt', container);
-      this._buttons.forEach(button => {
-          button.addEventListener('click', () => {
-            this.payment = button.name; 
-            events.emit('payment:change', button)
-          });
-      })
-
+    this._buttons = ensureAllElements<HTMLButtonElement>('.button_alt', container);
+    this._buttons.forEach(button => {
+      button.addEventListener('click', () => {
+        this.payment = button.name; 
+        events.emit('order:set-payment-type', button)
+      });
+    })
   }
 
   set payment(name: string) {
@@ -28,8 +27,8 @@ export class Order extends Form<IOrderForm> {
 
   set address(value: string) {
     const input = this.container.querySelector<HTMLInputElement>('input[name="address"]');
-    if (input) {
-      input.value = value;
+      if (input) {
+        input.value = value;
     }
   }
 }

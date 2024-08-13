@@ -43,10 +43,8 @@ export class ProductsCatalog extends Model<IProductCatalog> {
     
     removeItem(context: 'order' | 'basket', item: IProduct) {
         let targetList = context === 'order' ? this.order.items : this.basket;
-    
         const index = targetList.findIndex(i => typeof i === 'object' && i.id === item.id);
-    
-        if (index >= 0) {
+            if (index >= 0) {
             targetList.splice(index, 1);
         }
     }

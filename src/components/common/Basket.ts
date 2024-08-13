@@ -22,10 +22,9 @@ export class Basket extends Component<IBasket> {
     if (this.button) {
       this.button.textContent = 'Оформить';
       this.button.addEventListener('click', () => {
-        this.events.emit('order:open');
+        this.events.emit('basket:create-order');
       });
     }
-
     this.items = [];
   }
 
